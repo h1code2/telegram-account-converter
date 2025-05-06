@@ -1,4 +1,4 @@
-name: Build Telegram Account Converter (With Upload to Release)
+name: Build Telegram Account Converter (Push to download Branch)
 
 on:
   push:
@@ -6,42 +6,9 @@ on:
       - main
 
 jobs:
-  # Step 1: 创建唯一 Tag 并创建 Draft Release
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload-url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Get Commit Hash
-        id: commit_hash
-        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Create and Push Tag
-        run: |
-          TAG_NAME="build-${{ env.COMMIT_HASH }}"
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: build-${{ env.COMMIT_HASH }}
-          name: Continuous Build - ${{ env.COMMIT_HASH }}
-          draft: true
-          prerelease: true
-
-  # Step 2: 构建 macOS 版本并上传
   build-mac-m1:
     name: Build macOS ARM (M1/M2)
     runs-on: macos-latest
-    needs: create-release
 
     steps:
       - name: Checkout code
@@ -74,22 +41,19 @@ jobs:
           cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to download Branch (macOS)
+        uses: azure/push-to-deploy@v1
         with:
-          tag_name: build-${{ needs.create-release.outputs.release-tag }}
-          name: Continuous Build - ${{ needs.create-release.outputs.release-tag }}
-          draft: true
-          prerelease: true
-          files: TelegramAccountConverter-mac-arm64.zip
+          target-folder: .
+          source-folder: TelegramAccountConverter-mac-arm64.zip
+          branch: download
+          repository-name: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'Update macOS build'
 
-  # Step 3: 构建 Windows 版本并上传
   build-windows:
     name: Build Windows x64 EXE
     runs-on: windows-latest
-    needs: create-release
 
     steps:
       - name: Checkout code
@@ -119,13 +83,12 @@ jobs:
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
           Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to download Branch (Windows)
+        uses: azure/push-to-deploy@v1
         with:
-          tag_name: build-${{ needs.create-release.outputs.release-tag }}
-          name: Continuous Build - ${{ needs.create-release.outputs.release-tag }}
-          draft: true
-          prerelease: true
-          files: TelegramAccountConverter-win-x64.zip
+          target-folder: .
+          source-folder: TelegramAccountConverter-win-x64.zip
+          branch: download
+          repository-name: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'Update Windows build'

@@ -1,0 +1,93 @@
+name: Build Telegram Account Converter (Cross Platform)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-mac-m1:
+    name: Build macOS ARM (M1/M2)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+
+      - name: Clean old builds
+        run: |
+          rm -rf dist build *.spec TelegramAccountConverter.app
+
+      - name: Build macOS App
+        run: |
+          pyinstaller \
+            --name=TelegramAccountConverter \
+            --windowed \
+            --add-data="gui.py:." \
+            --add-data="converter.py:." \
+            main.py
+
+      - name: Package to ZIP
+        run: |
+          mkdir -p TelegramAccountConverter-mac-arm64
+          cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
+          zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: TelegramAccountConverter-mac-arm64
+          path: TelegramAccountConverter-mac-arm64.zip
+
+  build-windows:
+    name: Build Windows x64 EXE
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          architecture: x64
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+
+      - name: Clean old builds
+        run: |
+          rmdir /s /q dist build
+          del *.spec
+
+      - name: Build Windows EXE
+        run: |
+          pyinstaller ^
+            --name=TelegramAccountConverter ^
+            --onefile ^
+            --add-data="gui.py;." ^
+            --add-data="converter.py;." ^
+            main.py
+
+      - name: Package to ZIP
+        run: |
+          mkdir TelegramAccountConverter-win-x64
+          copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
+          powershell Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: TelegramAccountConverter-win-x64
+          path: TelegramAccountConverter-win-x64.zip

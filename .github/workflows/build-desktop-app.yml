@@ -67,8 +67,8 @@ jobs:
 
       - name: Clean old builds
         run: |
-          rmdir /s /q dist build
-          del *.spec
+          Remove-Item -Recurse -Force dist, build -ErrorAction SilentlyContinue
+          Remove-Item *.spec -ErrorAction SilentlyContinue
 
       - name: Build Windows EXE
         run: |
@@ -83,7 +83,7 @@ jobs:
         run: |
           mkdir TelegramAccountConverter-win-x64
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
-          powershell Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
+          Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
       - name: Show success message
         run: |

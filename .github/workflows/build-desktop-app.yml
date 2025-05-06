@@ -42,8 +42,8 @@ jobs:
           cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact (via upload-pages-artifact)
+        uses: actions/upload-pages-artifact@v1
         with:
           name: TelegramAccountConverter-mac-arm64
           path: TelegramAccountConverter-mac-arm64.zip
@@ -86,8 +86,8 @@ jobs:
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
           powershell Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact (via upload-pages-artifact)
+        uses: actions/upload-pages-artifact@v1
         with:
           name: TelegramAccountConverter-win-x64
           path: TelegramAccountConverter-win-x64.zip

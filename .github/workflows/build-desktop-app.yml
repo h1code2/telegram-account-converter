@@ -9,19 +9,33 @@ jobs:
   create-release:
     name: Create or Get Release
     runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.create_release.outputs.id }}
+      upload-url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - name: Create GitHub Release (Draft)
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get current commit hash
+        id: commit_hash
+        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Create Tag
+        run: |
+          TAG_NAME="continuous-build-${{ env.COMMIT_HASH }}"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+      - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: actions/create-or-update-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: continuous-build
-          name: Continuous Integration Build
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: "Continuous Build - ${{ env.COMMIT_HASH }}"
           draft: true
           prerelease: true
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
 
   build-mac-m1:
     name: Build macOS ARM (M1/M2)
@@ -38,8 +52,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: |
-          pip install pyinstaller
+        run: pip install pyinstaller
 
       - name: Clean old builds
         run: |
@@ -60,17 +73,12 @@ jobs:
           cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
-      - name: Show success message
-        run: |
-          echo "✅ macOS ARM 构建和打包完成！"
-          ls -la TelegramAccountConverter-mac-arm64.zip
-
       - name: Upload to GitHub Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.upload-url }}
           asset_path: TelegramAccountConverter-mac-arm64.zip
           asset_name: TelegramAccountConverter-mac-arm64.zip
           asset_content_type: application/zip
@@ -91,8 +99,7 @@ jobs:
           architecture: x64
 
       - name: Install dependencies
-        run: |
-          pip install pyinstaller
+        run: pip install pyinstaller
 
       - name: Clean old builds
         run: |
@@ -109,17 +116,12 @@ jobs:
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
           Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
-      - name: Show success message
-        run: |
-          echo "✅ Windows x64 构建和打包完成！"
-          dir TelegramAccountConverter-win-x64.zip
-
       - name: Upload to GitHub Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.upload-url }}
           asset_path: TelegramAccountConverter-win-x64.zip
           asset_name: TelegramAccountConverter-win-x64.zip
           asset_content_type: application/zip

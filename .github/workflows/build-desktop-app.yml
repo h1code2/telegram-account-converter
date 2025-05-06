@@ -1,4 +1,4 @@
-name: Build Telegram Account Converter (Cross Platform)
+name: Build Telegram Account Converter (No Upload)
 
 on:
   push:
@@ -42,11 +42,10 @@ jobs:
           cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
-      - name: Upload Artifact (via upload-pages-artifact)
-        uses: actions/upload-pages-artifact@v1
-        with:
-          name: TelegramAccountConverter-mac-arm64
-          path: TelegramAccountConverter-mac-arm64.zip
+      - name: Show success message
+        run: |
+          echo "✅ macOS ARM 构建和打包完成！"
+          ls -la TelegramAccountConverter-mac-arm64.zip
 
   build-windows:
     name: Build Windows x64 EXE
@@ -86,8 +85,7 @@ jobs:
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
           powershell Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
-      - name: Upload Artifact (via upload-pages-artifact)
-        uses: actions/upload-pages-artifact@v1
-        with:
-          name: TelegramAccountConverter-win-x64
-          path: TelegramAccountConverter-win-x64.zip
+      - name: Show success message
+        run: |
+          echo "✅ Windows x64 构建和打包完成！"
+          dir TelegramAccountConverter-win-x64.zip

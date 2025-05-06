@@ -42,11 +42,16 @@ jobs:
           cp -R dist/TelegramAccountConverter.app TelegramAccountConverter-mac-arm64/
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
-      - name: Upload Artifact (via upload-pages-artifact)
-        uses: actions/upload-pages-artifact@v1
-        with:
-          name: TelegramAccountConverter-mac-arm64
-          path: TelegramAccountConverter-mac-arm64.zip
+      - name: Upload via transfer.sh
+        id: upload-mac
+        run: |
+          FILENAME="TelegramAccountConverter-mac-arm64.zip"
+          URL=$(curl --upload-file "./$FILENAME" https://transfer.sh/$FILENAME)
+          echo "::set-output name=url::$URL"
+
+      - name: Print Download Link
+        run: |
+          echo "✅ macOS ARM 构建完成，下载地址: ${{ steps.upload-mac.outputs.url }}"
 
   build-windows:
     name: Build Windows x64 EXE
@@ -86,8 +91,13 @@ jobs:
           copy dist\TelegramAccountConverter.exe TelegramAccountConverter-win-x64\
           powershell Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
-      - name: Upload Artifact (via upload-pages-artifact)
-        uses: actions/upload-pages-artifact@v1
-        with:
-          name: TelegramAccountConverter-win-x64
-          path: TelegramAccountConverter-win-x64.zip
+      - name: Upload via transfer.sh
+        id: upload-win
+        run: |
+          curl.exe -F "file=@TelegramAccountConverter-win-x64.zip" https://transfer.sh/TelegramAccountConverter-win-x64.zip > download_url.txt
+          set /p DOWNLOAD_URL=<download_url.txt
+          echo "::set-output name=url::$DOWNLOAD_URL"
+
+      - name: Print Download Link
+        run: |
+          echo "✅ Windows x64 构建完成，下载地址: ${{ steps.upload-win.outputs.url }}"

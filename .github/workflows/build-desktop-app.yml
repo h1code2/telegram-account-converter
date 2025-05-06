@@ -10,30 +10,19 @@ jobs:
     name: Create or Get Release
     runs-on: ubuntu-latest
     outputs:
-      release-id: ${{ steps.create_release.outputs.id }}
       upload-url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Get current commit hash
-        id: commit_hash
-        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Create Tag
-        run: |
-          TAG_NAME="continuous-build-${{ env.COMMIT_HASH }}"
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
-
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-or-update-release@v2
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          release_name: "Continuous Build - ${{ env.COMMIT_HASH }}"
+          tag_name: continuous-build
+          name: Continuous Integration Build
           draft: true
           prerelease: true
 
@@ -74,14 +63,15 @@ jobs:
           zip -r TelegramAccountConverter-mac-arm64.zip TelegramAccountConverter-mac-arm64
 
       - name: Upload to GitHub Release
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload-url }}
-          asset_path: TelegramAccountConverter-mac-arm64.zip
-          asset_name: TelegramAccountConverter-mac-arm64.zip
-          asset_content_type: application/zip
+          tag_name: continuous-build
+          name: Continuous Integration Build
+          draft: true
+          prerelease: true
+          files: TelegramAccountConverter-mac-arm64.zip
 
   build-windows:
     name: Build Windows x64 EXE
@@ -117,11 +107,12 @@ jobs:
           Compress-Archive -Path TelegramAccountConverter-win-x64 -DestinationPath TelegramAccountConverter-win-x64.zip -Force
 
       - name: Upload to GitHub Release
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload-url }}
-          asset_path: TelegramAccountConverter-win-x64.zip
-          asset_name: TelegramAccountConverter-win-x64.zip
-          asset_content_type: application/zip
+          tag_name: continuous-build
+          name: Continuous Integration Build
+          draft: true
+          prerelease: true
+          files: TelegramAccountConverter-win-x64.zip

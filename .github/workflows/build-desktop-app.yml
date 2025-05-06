@@ -1,4 +1,4 @@
-name: Build Telegram Account Converter (No Upload)
+name: Build Telegram Account Converter (With Upload)
 
 on:
   push:
@@ -6,9 +6,27 @@ on:
       - main
 
 jobs:
+  create-release:
+    name: Create or Get Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release (Draft)
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: continuous-build
+          name: Continuous Integration Build
+          draft: true
+          prerelease: true
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
   build-mac-m1:
     name: Build macOS ARM (M1/M2)
     runs-on: macos-latest
+    needs: create-release
 
     steps:
       - name: Checkout code
@@ -47,9 +65,20 @@ jobs:
           echo "✅ macOS ARM 构建和打包完成！"
           ls -la TelegramAccountConverter-mac-arm64.zip
 
+      - name: Upload to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: TelegramAccountConverter-mac-arm64.zip
+          asset_name: TelegramAccountConverter-mac-arm64.zip
+          asset_content_type: application/zip
+
   build-windows:
     name: Build Windows x64 EXE
     runs-on: windows-latest
+    needs: create-release
 
     steps:
       - name: Checkout code
@@ -84,3 +113,13 @@ jobs:
         run: |
           echo "✅ Windows x64 构建和打包完成！"
           dir TelegramAccountConverter-win-x64.zip
+
+      - name: Upload to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: TelegramAccountConverter-win-x64.zip
+          asset_name: TelegramAccountConverter-win-x64.zip
+          asset_content_type: application/zip

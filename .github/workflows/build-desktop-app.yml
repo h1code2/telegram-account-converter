@@ -72,12 +72,7 @@ jobs:
 
       - name: Build Windows EXE
         run: |
-          pyinstaller ^
-            --name=TelegramAccountConverter ^
-            --onefile ^
-            --add-data="gui.py;." ^
-            --add-data="converter.py;." ^
-            main.py
+          pyinstaller --name=TelegramAccountConverter --onefile --add-data="gui.py;." --add-data="converter.py;." main.py
 
       - name: Package to ZIP
         run: |
